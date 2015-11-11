@@ -53,6 +53,7 @@
 #include <time.h>
 #include <stdint.h>
 
+#include "sdhxcfe_cfg.h"
 #include "batch_converter_window.h"
 #include "filesystem_generator_window.h"
 #include "cb_filesystem_generator_window.h"
@@ -124,13 +125,14 @@ const char * plugid_lst[]=
 	PLUGIN_NEC_D88,
 	PLUGIN_ATARIST_ST,
 	PLUGIN_ATARIST_MSA,
-	PLUGIN_ATARIST_DIM,	
+	PLUGIN_ATARIST_DIM,
 	PLUGIN_ATARIST_STX,
 	PLUGIN_ATARIST_STW,
 	PLUGIN_HXC_HDDD_A2,
 	PLUGIN_HXC_EXTHFE,
 	PLUGIN_ARBURG,
 	PLUGIN_SKF,
+	PLUGIN_IPF,
 	PLUGIN_SCP,
 	PLUGIN_BMP,
 	PLUGIN_DISK_BMP,
@@ -451,6 +453,7 @@ void save_file_image(Fl_Widget * w, void * fc_ptr)
 					"HFE file (Rev 2 - Experimental)\t*.hfe\n"
 					"Arburg file\t*.arburgfd\n"
 					"KF Stream file\t*.raw\n"
+					"SPS IPF file (W.I.P)\t*.ipf\n"
 					"SCP file\t*.scp\n"
 					"BMP file\t*.bmp\n"
 					"BMP file (disk)\t*.bmp\n"
@@ -709,6 +712,56 @@ static void tick_mw(void *v) {
 			window->sdcfg_window->chk_hfe_doublestep->value(0);
 		if(window->usbcfg_window->chk_doublestep->value())
 			window->usbcfg_window->chk_doublestep->value(0);
+	}
+
+
+	if(window->sdcfg_window->choice_interfacemode_drva_cfg->value() != 13)
+	{
+		window->sdcfg_window->choice_pin02_drva->deactivate();
+		window->sdcfg_window->choice_pin34_drva->deactivate();
+		window->sdcfg_window->choice_pin02_drva->value(0);
+		window->sdcfg_window->choice_pin34_drva->value(0);
+	}
+	else
+	{
+		window->sdcfg_window->choice_pin02_drva->activate();
+		window->sdcfg_window->choice_pin34_drva->activate();
+	}
+
+	if( !window->sdcfg_window->chk_enable_twodrives_emu->value() )
+	{
+		window->sdcfg_window->choice_interfacemode_drvb_cfg->value( window->sdcfg_window->choice_interfacemode_drva_cfg->value() );
+		window->sdcfg_window->choice_pin02_drvb->value(window->sdcfg_window->choice_pin02_drva->value());
+		window->sdcfg_window->choice_pin34_drvb->value(window->sdcfg_window->choice_pin34_drva->value());
+
+		window->sdcfg_window->choice_interfacemode_drvb_cfg->deactivate();
+		window->sdcfg_window->choice_pin02_drvb->deactivate();
+		window->sdcfg_window->choice_pin34_drvb->deactivate();
+	}
+	else
+	{
+		window->sdcfg_window->choice_interfacemode_drvb_cfg->activate();
+	}
+
+	if(window->sdcfg_window->choice_interfacemode_drvb_cfg->value() != 13 )
+	{
+		window->sdcfg_window->choice_pin02_drvb->deactivate();
+		window->sdcfg_window->choice_pin34_drvb->deactivate();
+		window->sdcfg_window->choice_pin02_drvb->value(0);
+		window->sdcfg_window->choice_pin34_drvb->value(0);
+	}
+	else
+	{
+		if( window->sdcfg_window->chk_enable_twodrives_emu->value() )
+		{
+			window->sdcfg_window->choice_pin02_drvb->activate();
+			window->sdcfg_window->choice_pin34_drvb->activate();
+		}
+		else
+		{
+			window->sdcfg_window->choice_pin02_drvb->deactivate();
+			window->sdcfg_window->choice_pin34_drvb->deactivate();
+		}
 	}
 
 	window->batchconv_window->progress_indicator->redraw();
@@ -1006,7 +1059,13 @@ Main_Window::Main_Window()
 	sdcfg_window->valslider_device_backlight_timeout->scrollvalue(guicontext->backlight_tmr,1,0,256);
 	sdcfg_window->valslider_device_standby_timeout->scrollvalue(guicontext->standby_tmr,1,0,256);
 	sdcfg_window->chk_loadlastloaded->set();
-
+	sdcfg_window->chk_enable_twodrives_emu->set();
+	sdcfg_window->choice_pin02_drva->menu(pincfg_choices);
+	sdcfg_window->choice_pin34_drva->menu(pincfg_choices);
+	sdcfg_window->choice_pin02_drvb->menu(pincfg_choices);
+	sdcfg_window->choice_pin34_drvb->menu(pincfg_choices);
+	sdcfg_window->choice_interfacemode_drva_cfg->menu(feifcfg_choices);
+	sdcfg_window->choice_interfacemode_drvb_cfg->menu(feifcfg_choices);
 	//////////////////////////////////////////////
 	// USB FE CFG window
 #ifndef STANDALONEFSBROWSER
